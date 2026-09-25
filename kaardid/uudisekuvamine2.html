@@ -12,10 +12,12 @@
           v1.innerText=tekst;
           p1.innerText=tekst[0];
           s1.innerText=tekst[1];
+          //Lisage juurde kolmas lahter pikema sisuga
+         //Kuvage lahtrile kast ümber
        }
     </script>
   </head>
-  <body>
+  <body onload="loe(); setInterval('loe()', 10000)">
     Teade: <span id="v1">teate koht</span>
     <input type="button" value="Kuva teade" onclick="loe()"/>
     <h1 id="p1">Pealkirja koht</h1>
