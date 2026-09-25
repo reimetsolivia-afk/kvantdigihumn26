@@ -1,0 +1,8 @@
+function doGet(){
+    let leht=SpreadsheetApp.openById("1MRIflI0r3x2b5iFodu_Fx8I6AIDBCKk20EKMFmPoWqQ").getSheets()[0];
+    return ContentService.createTextOutput(
+      JSON.stringify(leht.getDataRange().getValues())).setMimeType(ContentService.MimeType.JSON);
+}
+
+// https://script.google.com/macros/s/AKfycbxvWEadqqmQwN7yFLU0TRJJdHwRJuljpc3Hw7sFv8CKcoYm8Mu-kMF71EvVDnIjHyR2/exec
+
