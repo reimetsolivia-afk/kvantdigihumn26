@@ -39,16 +39,12 @@
    function vajutus(e){
 	     hypik.setLatLng(e.latlng).
 		 setContent("Vajutasid "+e.latlng.toString()).openOn(kaart);
-
-     // http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397634,52.529407?overview=full&geometries=geojson
-     // http://router.project-osrm.org/route/v1/driving/24.55307,59.428316;24.987373,59.457465?overview=full&geometries=geojson
-	   //59.428316, 24.55307
-	   //59.457465, 24.987373
    }
 
   </script>
  </head>  
  <body onload="algus()">
+  <div id= "selgitus">selgituse koht</div>
   <div id="kaardikiht"></div>
  </body>
 </html>
