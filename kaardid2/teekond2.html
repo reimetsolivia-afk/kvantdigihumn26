@@ -30,6 +30,10 @@
 	kaart.on("click", vajutus);
     fetch("https://router.project-osrm.org/route/v1/driving/24.55307,59.428316;24.987373,59.457465?overview=full&geometries=geojson").then(d => d.json()).then(kuvaTee);
    }
+
+	function liikumine(){
+		selgitus.innerText=marker1.getLatLng().distanceTo(marker2.getLatLng());
+	}
 	function kuvaTee(andmed){
 		tee=andmed.routes[0];
 		console.log(tee["duration"], tee["distance"]);
