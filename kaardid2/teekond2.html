@@ -32,7 +32,7 @@
    }
 
 	function liikumine(){
-		selgitus.innerText=marker1.getLatLng().distanceTo(marker2.getLatLng());
+		selgitus.innerText=Math.round(marker1.getLatLng().distanceTo(marker2.getLatLng()))/1000+" km";
 	}
 	function kuvaTee(andmed){
 		tee=andmed.routes[0];
