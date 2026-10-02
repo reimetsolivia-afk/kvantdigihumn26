@@ -21,6 +21,8 @@
     }).addTo(kaart);
     marker1=L.marker([59.439, 24.773], {draggable: true});
     marker2=L.marker([59.439, 24.773], {draggable: true});
+	grupp=L.layerGroup();
+	grupp.addTo(kaart);
     marker1.addTo(kaart);
     marker2.addTo(kaart);
     marker1.on("dragend", liikumine);
@@ -30,6 +32,7 @@
    }
    function liikumine(){
 	   selgitus.innerText=Math.round(marker1.getLatLng().distanceTo(marker2.getLatLng()))/1000+" km";
+	   L.polyline([marker1.getLatLng(), marker2.getLatLng()]).addTo(grupp);
    }
 	function kuvaTee(andmed){
 		tee=andmed.routes[0];
