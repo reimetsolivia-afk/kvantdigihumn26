@@ -34,7 +34,7 @@
 	   selgitus.innerText=Math.round(marker1.getLatLng().distanceTo(marker2.getLatLng()))/1000+" km";
 	   grupp.clearLayers();
      let koht1=marker1.getLatLng();
-     let koht1=marker1.getLatLng();
+     let koht2=marker2.getLatLng();
 	   L.polyline([koht1, koht2]).addTo(grupp);
      let address="https://router.project-osrm.org/route/v1/driving/"+koht1.lng+","+
                koht1.lat+";"+koht2.lng+","+koht2.lat+"?overview=full&geometries=geojson"
