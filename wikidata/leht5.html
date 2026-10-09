@@ -5,8 +5,8 @@
         function kysi(){ 
            let lause=`
              SELECT ?kool ?koolLabel (COUNT(*) as ?kogus) {
-                ?isik wdt:P27 wd:Q191.
-                ?isik wdt:P106 wd:Q482980.
+                let riik = document.getElementById("riik").value;
+                let amet = document.getElementById("amet").value;
                 ?isik wdt:P69 ?kool.
                 SERVICE wikibase:label {
                   bd:serviceParam wikibase:language "et,en".
@@ -25,9 +25,9 @@
            vastus.innerHTML="";
            for(let rida of d["results"]["bindings"]){
               console.log(rida["koolLabel"]["value"]);
-              let lause=document.createElement("li");
-              lause.textContent=rida["itemLabel"]["value"];
-              vastus.appendChild(lause);
+              let element=document.createElement("li");
+              element.textContent=rida["koolLabel"]["value"];
+              vastus.appendChild(element);
            }
         }
      </script>
