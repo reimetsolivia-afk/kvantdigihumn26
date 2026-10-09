@@ -42,10 +42,9 @@
        
         function kuva(d){
            console.log(d);
-           //vastus.textContent="";
+           vastus.innerHTML="";
            for(let rida of d["results"]["bindings"]){
               console.log(rida["itemLabel"]["value"]);
-              //vastus.textContent+=" "+rida["itemLabel"]["value"];
               let lause=document.createElement("li");
               lause.textContent=rida["itemLabel"]["value"];
               vastus.appendChild(lause);
