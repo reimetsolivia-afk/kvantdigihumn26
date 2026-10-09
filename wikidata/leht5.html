@@ -3,21 +3,18 @@
   <head>
      <script>
         function kysi(){ 
-           //Vaadake, milliseid ameteid (P106) on Wikidatas
-           //Võimaldage teisest rippmenüüst valida ametit
-           // (uuel lehel)
            let lause=`
-             SELECT ?item ?itemLabel
-              WHERE
-              {
-                ?item wdt:P27 wd:${riik.value}. 
-                ?item wdt:P106 wd:${amet.value}.
-              
+             SELECT ?kool ?koolLabel (COUNT(*) as ?kogus) {
+                ?isik wdt:P27 wd:Q191.
+                ?isik wdt:P106 wd:Q482980.
+                ?isik wdt:P69 ?kool.
                 SERVICE wikibase:label {
-                  bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,en".
+                  bd:serviceParam wikibase:language "et,en".
                 } 
-              }
-              LIMIT 10
+              
+              } GROUP BY ?kool ?koolLabel
+               ORDER BY DESC(?kogus)
+
            `;
            let aadress="https://query.wikidata.org/sparql?format=json&query="+encodeURI(lause);      
            fetch(aadress).then(d => d.json()).then(kuva);
@@ -27,7 +24,7 @@
            console.log(d);
            vastus.innerHTML="";
            for(let rida of d["results"]["bindings"]){
-              console.log(rida["itemLabel"]["value"]);
+              console.log(rida["koolLabel"]["value"]);
               let lause=document.createElement("li");
               lause.textContent=rida["itemLabel"]["value"];
               vastus.appendChild(lause);
