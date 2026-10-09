@@ -3,12 +3,15 @@
   <head>
      <script>
         function kysi(){ 
+           //Vaadake, milliseid ameteid (P106) on Wikidatas
+           //Võimaldage teisest rippmenüüst valida ametit
+           // (uuel lehel)
            let lause=`
              SELECT ?item ?itemLabel
               WHERE
               {
                 ?item wdt:P27 wd:${riik.value}. 
-                ?item wdt:P106 wd:Q177220.
+                ?item wdt:P106 wd:${amet.value}.
               
                 SERVICE wikibase:label {
                   bd:serviceParam wikibase:language "[AUTO_LANGUAGE],mul,en".
@@ -19,6 +22,7 @@
            let aadress="https://query.wikidata.org/sparql?format=json&query="+encodeURI(lause);      
            fetch(aadress).then(d => d.json()).then(kuva);
         }
+
 
        
         function kuva(d){
@@ -34,7 +38,7 @@
      </script>
   </head>
   <body>
-    <select id="riik" onchange="kysi()">
+     <select id="riik" onchange="kysi()">
         <option value="Q33">Soome</option>
         <option value="Q191">Eesti</option>
         <option value="Q20">Norra</option>
@@ -46,7 +50,9 @@
       <option value="Q483501">kunstnik</option>
       <option value="Q1281618">skulptor</option>
      </select>
+
      <input type="button" value="otsi" onclick="kysi()" />
+ 
      <ul id="vastus"></ul>
   </body>
 </html>
