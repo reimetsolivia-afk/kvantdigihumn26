@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naised (Google Sheets)</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+        }
+
+        header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 6px 0;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .meta-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 14px 0 20px 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: #f1f5f9;
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button.btn-refresh {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: background-color 0.15s ease;
+        }
+
+        button.btn-refresh:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .name-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .name-item {
+            padding: 10px 14px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.1s ease, border-color 0.1s ease;
+        }
+
+        .name-item:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .index-badge {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-loading {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            margin-right: 6px;
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Naisenimed</h1>
+            <p class="subtitle">Andmed Google Sheetsi tabeli 3. lehelt (uueneb automaatselt)</p>
+        </header>
+
+        <div class="meta-bar">
+            <div>
+                <span class="pulse"></span>
+                Uuendus: <strong id="timer">30</strong> s pärast
+            </div>
+            <div class="actions">
+                <span id="last-updated">Laadimine...</span>
+                <button class="btn-refresh" onclick="uuendaNimed()">Värskenda</button>
+            </div>
+        </div>
+
+        <ul id="nimed-list" class="name-list">
+            <li class="status-loading">Andmete laadimine...</li>
+        </ul>
+    </div>
+
+    <script>
+        const INTERVAL_SECONDS = 30;
+        let countdown = INTERVAL_SECONDS;
+
+        // Callback Google Visualization JSONP päringule
+        function laadiNimed(data) {
+            const listEl = document.getElementById("nimed-list");
+            listEl.innerHTML = "";
+
+            if (!data || !data.table || !data.table.rows) {
+                listEl.innerHTML = "<li class='status-loading'>Andmete laadimine ebaõnnestus.</li>";
+                return;
+            }
+
+            const nimed = data.table.rows
+                .map(row => row.c && row.c[0] ? row.c[0].v : "")
+                .filter(nimi => nimi && nimi.toString().trim().length > 0);
+
+            if (nimed.length === 0) {
+                listEl.innerHTML = "<li class='status-loading'>Tabelis ei leitud nimesid.</li>";
+                return;
+            }
+
+            nimed.forEach((nimi, index) => {
+                const li = document.createElement("li");
+                li.className = "name-item";
+                li.innerHTML = `<span>${nimi}</span><span class="index-badge">#${index + 1}</span>`;
+                listEl.appendChild(li);
+            });
+
+            const aeg = new Date().toLocaleTimeString("et-EE");
+            document.getElementById("last-updated").textContent = `Kell ${aeg}`;
+            countdown = INTERVAL_SECONDS;
+            document.getElementById("timer").textContent = countdown;
+        }
+
+        // Laadib andmed JSONP abil (töötab otse failist avades ilma CORS-piiranguteta)
+        function uuendaNimed() {
+            const vanaSkript = document.getElementById("gviz-skript");
+            if (vanaSkript) {
+                vanaSkript.remove();
+            }
+
+            const skript = document.createElement("script");
+            skript.id = "gviz-skript";
+            // 3. lehe gid on 1882489076
+            skript.src = `https://docs.google.com/spreadsheets/d/1Q4IP0w2tJDxDocMihhElBhg6em1d8H9p2peOe2Hv43k/gviz/tq?tqx=responseHandler:laadiNimed&gid=1882489076&_=${Date.now()}`;
+            document.body.appendChild(skript);
+        }
+
+        // Taimer: loendab 30-st allapoole ja teeb iga 30s järel päringu
+        setInterval(() => {
+            countdown--;
+            if (countdown <= 0) {
+                uuendaNimed();
+                countdown = INTERVAL_SECONDS;
+            }
+            document.getElementById("timer").textContent = countdown;
+        }, 1000);
+
+        // Esmane laadimine kohe lehe avamisel
+        window.addEventListener("DOMContentLoaded", uuendaNimed);
+    </script>
+</body>
+</html>
