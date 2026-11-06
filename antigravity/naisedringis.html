@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naised ringis (Google Sheets)</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #4f46e5;
+            --primary-light: #eef2ff;
+            --primary-hover: #4338ca;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --ring-track: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin: 0 0 6px 0;
+            color: var(--text-main);
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* Ringikujuline lava */
+        .stage-wrapper {
+            position: relative;
+            width: min(92vw, 560px);
+            height: min(92vw, 560px);
+            margin: 10px auto;
+        }
+
+        .circle-stage {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px dashed var(--ring-track);
+            background: radial-gradient(circle, rgba(238, 242, 255, 0.4) 0%, rgba(248, 250, 252, 0.8) 70%);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Keskmine info-paneel */
+        .center-hub {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 16px;
+            z-index: 10;
+        }
+
+        .hub-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .hub-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .hub-timer {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pulse {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: #22c55e;
+            animation: pulse-anim 2s infinite;
+        }
+
+        @keyframes pulse-anim {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.7; }
+        }
+
+        button.btn-refresh {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: background-color 0.15s ease, transform 0.1s ease;
+        }
+
+        button.btn-refresh:hover {
+            background-color: var(--primary-hover);
+            transform: scale(1.03);
+        }
+
+        /* Üksik tantsija märk ringis */
+        .dancer-node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: var(--card-bg);
+            border: 1.5px solid var(--border);
+            padding: 6px 12px 6px 6px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            white-space: nowrap;
+            transition: transform 0.3s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            user-select: none;
+        }
+
+        .dancer-node:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+            transform: translate(-50%, -50%) scale(1.08);
+            z-index: 20;
+        }
+
+        .avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .status-bar {
+            margin-top: 18px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Naised ringis</h1>
+        <p class="subtitle">Google Sheetsi tabeli 3. lehe nimed paigutatuna tantsuringi</p>
+    </header>
+
+    <div class="stage-wrapper">
+        <div class="circle-stage" id="circle-stage">
+            <div class="center-hub">
+                <div class="hub-title">Tantsuring</div>
+                <div class="hub-count" id="count-display">Laadimine...</div>
+                <div class="hub-timer">
+                    <span class="pulse"></span>
+                    <span id="timer-text">Uuendus: <strong id="timer">30</strong> s</span>
+                </div>
+                <button class="btn-refresh" onclick="uuendaNimed()">Värskenda</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar" id="status-bar">
+        Viimati uuendatud: ootel...
+    </div>
+
+    <script>
+        const INTERVAL_SECONDS = 30;
+        let countdown = INTERVAL_SECONDS;
+        let praegusedNimed = [];
+
+        // Paigutab nimed geomeetriliselt ühtlaselt piki ringjoont
+        function paigutaRingi(nimed) {
+            const stage = document.getElementById("circle-stage");
+            
+            // Eemaldame eelmised nimesildid
+            const vanad = stage.querySelectorAll(".dancer-node");
+            vanad.forEach(el => el.remove());
+
+            const n = nimed.length;
+            if (n === 0) return;
+
+            const stageWidth = stage.clientWidth;
+            const stageHeight = stage.clientHeight;
+            const centerX = stageWidth / 2;
+            const centerY = stageHeight / 2;
+
+            // Raadius: jätab servadesse ja keskele parajalt ruumi
+            const radius = (Math.min(stageWidth, stageHeight) / 2) - 48;
+
+            nimed.forEach((nimi, i) => {
+                // Jaotame nime n võrdse nurga all piki ringjoont
+                // -Math.PI / 2 alustab kell 12 asendist (ülevalt)
+                const nurk = (2 * Math.PI / n) * i - (Math.PI / 2);
+                const x = centerX + radius * Math.cos(nurk);
+                const y = centerY + radius * Math.sin(nurk);
+
+                const node = document.createElement("div");
+                node.className = "dancer-node";
+                node.style.left = `${x.toFixed(1)}px`;
+                node.style.top = `${y.toFixed(1)}px`;
+                node.innerHTML = `
+                    <div class="avatar">${i + 1}</div>
+                    <span>${nimi}</span>
+                `;
+                stage.appendChild(node);
+            });
+        }
+
+        // Callback Google Visualization JSONP päringule
+        function laadiNimed(data) {
+            if (!data || !data.table || !data.table.rows) {
+                document.getElementById("count-display").textContent = "Viga laadimisel";
+                return;
+            }
+
+            const nimed = data.table.rows
+                .map(row => row.c && row.c[0] ? row.c[0].v : "")
+                .filter(nimi => nimi && nimi.toString().trim().length > 0);
+
+            praegusedNimed = nimed;
+            document.getElementById("count-display").textContent = `${nimed.length} tantsijat`;
+            paigutaRingi(nimed);
+
+            const kell = new Date().toLocaleTimeString("et-EE");
+            document.getElementById("status-bar").textContent = `Viimati uuendatud: kell ${kell} (${nimed.length} nime)`;
+            countdown = INTERVAL_SECONDS;
+            document.getElementById("timer").textContent = countdown;
+        }
+
+        // Pärib andmed Google Sheetsist JSONP kaudu
+        function uuendaNimed() {
+            const vanaSkript = document.getElementById("gviz-skript");
+            if (vanaSkript) {
+                vanaSkript.remove();
+            }
+
+            const skript = document.createElement("script");
+            skript.id = "gviz-skript";
+            // 3. leht ("naised"), mille gid on 1882489076
+            skript.src = `https://docs.google.com/spreadsheets/d/1Q4IP0w2tJDxDocMihhElBhg6em1d8H9p2peOe2Hv43k/gviz/tq?tqx=responseHandler:laadiNimed&gid=1882489076&_=${Date.now()}`;
+            document.body.appendChild(skript);
+        }
+
+        // Akna suuruse muutumisel arvutame ringi punktid ümber
+        window.addEventListener("resize", () => {
+            if (praegusedNimed.length > 0) {
+                paigutaRingi(praegusedNimed);
+            }
+        });
+
+        // Taimer: 30 sekundi loendus
+        setInterval(() => {
+            countdown--;
+            if (countdown <= 0) {
+                uuendaNimed();
+                countdown = INTERVAL_SECONDS;
+            }
+            document.getElementById("timer").textContent = countdown;
+        }, 1000);
+
+        // Esmane laadimine lehe avamisel
+        window.addEventListener("DOMContentLoaded", uuendaNimed);
+    </script>
+</body>
+</html>
