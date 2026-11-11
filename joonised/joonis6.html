@@ -1,0 +1,303 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Ilmamõjudega lumememmed</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f4f8;
+        margin: 20px;
+      }
+      h1 {
+        color: #1a365d;
+        margin-bottom: 6px;
+      }
+      p.selgitus {
+        color: #4a5568;
+        margin-top: 0;
+        margin-bottom: 14px;
+        line-height: 1.4;
+      }
+      canvas {
+        background-color: #ffffff;
+        border: 1px solid #cbd5e0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        border-radius: 6px;
+      }
+    </style>
+    <script>
+      let g;
+
+      // Failist ilmaandmed.txt võetud ilmaandmed massiivina
+      let ilmaandmed = [
+        {
+          kuupaev: "12.11.2026",
+          paev: "Neljapäev",
+          temp: 6,
+          tuul: 7,
+          puhang: 18,
+          suund: "Lõuna, kagu",
+          suundX: -1,   // puhub läände (vasakule)
+          sademed: 7.0, // tihedam vihm ja lörtsioht
+          ilm: "Pilves, vihm ja lörtsioht"
+        },
+        {
+          kuupaev: "13.11.2026",
+          paev: "Reede",
+          temp: 4,
+          tuul: 8,
+          puhang: 18,
+          suund: "Kagu, lõuna",
+          suundX: -1,   // puhub läände (vasakule)
+          sademed: 5.0, // hooti vihm ja lörts
+          ilm: "Pilves, hooti vihm ja lörts"
+        },
+        {
+          kuupaev: "14.11.2026",
+          paev: "Laupäev",
+          temp: 4,
+          tuul: 9,
+          puhang: 22,
+          suund: "Lääs",
+          suundX: 1,    // läänetuul puhub itta (paremale)
+          sademed: 3.0, // kohati sadu
+          ilm: "Pilves selgimistega, kohati sadu"
+        },
+        {
+          kuupaev: "15.11.2026",
+          paev: "Pühapäev",
+          temp: 6,
+          tuul: 8,
+          puhang: 20,
+          suund: "Edel",
+          suundX: 1,    // edelatuul puhub kirdesse (paremale)
+          sademed: 1.5, // kerge vihm
+          ilm: "Vahelduv pilvisus, kerge vihm"
+        }
+      ];
+
+      // Funktsioon lumememme joonistamiseks ilmastiku mõjudega
+      // Parameetrid:
+      //   x               - lumememme alumise palli keskpunkti x-koordinaat
+      //   y               - lumememme alumise palli keskpunkti y-koordinaat
+      //   temperatuur     - suurem temp = väiksem lumememm (sulab soojaga kokku)
+      //   tuuleKiirus     - suurem tuul lennutab mütsi kaugemale
+      //   puhanguKiirus   - tugevdab tuule mõju mütsile
+      //   kuupaev         - joonistatakse lumememme alla
+      //   sademed         - suurem sademete hulk paneb pallid rohkem kattuma (nagu vihm sulataks)
+      //   tuuleSuund      - määrab tuule suuna (+1 = paremale, -1 = vasakule või suuna tekst)
+      function joonistaLumememm(x, y, temperatuur, tuuleKiirus, puhanguKiirus, kuupaev, sademed, tuuleSuund) {
+        let ctx = g || (typeof tahvel !== "undefined" ? tahvel.getContext("2d") : null);
+
+        // Vaikimisi väärtused, kui lisaargumente pole antud
+        if (sademed === undefined) sademed = 4.0;
+        let suundX = 1;
+        if (typeof tuuleSuund === "number") {
+          suundX = tuuleSuund;
+        } else if (typeof tuuleSuund === "string") {
+          suundX = (tuuleSuund.includes("kagu") || tuuleSuund.includes("Kagu") || tuuleSuund.includes("Ida")) ? -1 : 1;
+        }
+
+        // 1. Suurem temperatuur tähistab väiksemat lumememme (soojus kahandab lumememme)
+        let r1 = Math.max(22, 54 - temperatuur * 3.4);   // Alumise palli raadius
+        let r2 = r1 * 0.74;                              // Keskmise palli raadius
+        let r3 = r1 * 0.52;                              // Pea raadius
+
+        // 2. Suurem sademete hulk paneb pallid rohkem üksteisega kattuma (nagu vihm sulataks kokku)
+        let ulekate1 = 4 + sademed * 2.2;
+        let ulekate2 = 3 + sademed * 1.6;
+
+        let y1 = y;
+        let y2 = y1 - (r1 + r2) + ulekate1;
+        let y3 = y2 - (r2 + r3) + ulekate2;
+
+        // 3. Lumepallid (valge täide ja tume kontuur)
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#2d3748";
+        ctx.lineWidth = 1.6;
+
+        // Alumine pall
+        ctx.beginPath();
+        ctx.arc(x, y1, r1, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+
+        // Keskmine pall
+        ctx.beginPath();
+        ctx.arc(x, y2, r2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+
+        // Ülemine pall (pea)
+        ctx.beginPath();
+        ctx.arc(x, y3, r3, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+
+        // 4. Tuule käes lendav müts
+        // Suurem tuule kiirus lennutab mütsi kaugemale vastavalt tuule suunale
+        let mutsLendX = suundX * (tuuleKiirus * 4.2 + (puhanguKiirus - 15) * 1.6);
+        let mutsLendY = - (tuuleKiirus * 1.8);
+        let mutsiKeseX = x + mutsLendX;
+        let mutsiKeseY = y3 - r3 + mutsLendY;
+        let mutsiKalle = suundX * (0.18 + tuuleKiirus * 0.03); // nurk tuules
+
+        // Tuulejoonekesed lendava mütsi taga
+        ctx.strokeStyle = "rgba(66, 153, 225, 0.6)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(mutsiKeseX - suundX * 12, mutsiKeseY + 2);
+        ctx.lineTo(mutsiKeseX - suundX * 36, mutsiKeseY + 6);
+        ctx.moveTo(mutsiKeseX - suundX * 8, mutsiKeseY - 10);
+        ctx.lineTo(mutsiKeseX - suundX * 30, mutsiKeseY - 8);
+        ctx.stroke();
+
+        // Joonistame pööratud ja lendava kübara
+        ctx.save();
+        ctx.translate(mutsiKeseX, mutsiKeseY);
+        ctx.rotate(mutsiKalle);
+
+        let hatBrimWidth = r3 * 2.1;
+        let hatBrimHeight = Math.max(3, r3 * 0.22);
+        let hatTopWidth = r3 * 1.25;
+        let hatTopHeight = r3 * 1.05;
+
+        ctx.fillStyle = "#1a202c";
+        ctx.fillRect(-hatBrimWidth / 2, -hatBrimHeight / 2, hatBrimWidth, hatBrimHeight);
+        ctx.fillRect(-hatTopWidth / 2, -hatBrimHeight / 2 - hatTopHeight, hatTopWidth, hatTopHeight);
+        ctx.restore();
+
+        // 5. Silmad (üllatunud pilk tuulest lendava mütsi poole)
+        let eyeRadius = Math.max(1.4, r3 * 0.12);
+        let eyeOffset = r3 * 0.35;
+        ctx.fillStyle = "#000000";
+
+        ctx.beginPath();
+        ctx.arc(x - eyeOffset, y3 - r3 * 0.2, eyeRadius, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(x + eyeOffset, y3 - r3 * 0.2, eyeRadius, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // 6. Porgandist nina (kaldub kergelt tuules)
+        ctx.fillStyle = "#ed8936";
+        ctx.beginPath();
+        ctx.moveTo(x, y3);
+        ctx.lineTo(x + suundX * r3 * 1.15, y3 + r3 * 0.15);
+        ctx.lineTo(x, y3 + r3 * 0.28);
+        ctx.fill();
+
+        // 7. Suu (üllatunud ümar suu tuulehoo tõttu)
+        ctx.strokeStyle = "#2d3748";
+        ctx.fillStyle = "#2d3748";
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.arc(x, y3 + r3 * 0.45, Math.max(2, r3 * 0.18), 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // 8. Nööbid keskmisel pallil
+        let buttonRadius = Math.max(1.5, r2 * 0.08);
+        let buttonOffsets = [-r2 * 0.35, 0, r2 * 0.35];
+        for (let i = 0; i < buttonOffsets.length; i++) {
+          ctx.beginPath();
+          ctx.arc(x, y2 + buttonOffsets[i], buttonRadius, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+
+        // 9. Käed (oksad, mis lehvivad samuti tuule suunas)
+        ctx.strokeStyle = "#4a5568";
+        ctx.lineWidth = 1.5;
+
+        // Vasak oks
+        ctx.beginPath();
+        ctx.moveTo(x - r2 * 0.95, y2);
+        ctx.lineTo(x - r2 * 2.0 + suundX * 8, y2 - r2 * 0.35);
+        ctx.lineTo(x - r2 * 2.4 + suundX * 12, y2 - r2 * 0.65);
+        ctx.moveTo(x - r2 * 2.0 + suundX * 8, y2 - r2 * 0.35);
+        ctx.lineTo(x - r2 * 2.3 + suundX * 10, y2 - r2 * 0.1);
+        ctx.stroke();
+
+        // Parem oks
+        ctx.beginPath();
+        ctx.moveTo(x + r2 * 0.95, y2);
+        ctx.lineTo(x + r2 * 2.0 + suundX * 8, y2 - r2 * 0.35);
+        ctx.lineTo(x + r2 * 2.4 + suundX * 12, y2 - r2 * 0.65);
+        ctx.moveTo(x + r2 * 2.0 + suundX * 8, y2 - r2 * 0.35);
+        ctx.lineTo(x + r2 * 2.3 + suundX * 10, y2 - r2 * 0.1);
+        ctx.stroke();
+
+        // 10. Kuupäev joonistatakse lumememmede alla
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillStyle = "#1a365d";
+        ctx.font = "bold 13px sans-serif";
+        ctx.fillText(kuupaev, x, y + 62);
+
+        // Täiendavad ilmaandmed selguse huvides kuupäeva all
+        ctx.fillStyle = "#2b6cb0";
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText("Temp: +" + temperatuur + " °C", x, y + 78);
+
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "11px sans-serif";
+        let nool = suundX > 0 ? "→ itta" : "← läände";
+        ctx.fillText("Tuul: " + tuuleKiirus + " m/s (" + nool + ")", x, y + 93);
+        ctx.fillText("Sademed: " + sademed.toFixed(1) + " mm", x, y + 108);
+      }
+
+      function joonista(){
+        g = tahvel.getContext("2d");
+
+        // Pealkiri lõuendil
+        g.fillStyle = "#1a365d";
+        g.font = "bold 16px sans-serif";
+        g.textAlign = "left";
+        g.fillText("Tallinna ilma mõjud lumememmedele (12.–15.11.2026)", 20, 28);
+
+        // Selgitav legend
+        g.fillStyle = "#718096";
+        g.font = "12px sans-serif";
+        g.fillText("• Soojem temp = väiksem memm   • Tugevam tuul = müts lendab kaugemale tuule suunas   • Rohkem sademeid = pallid sulavad kokku", 20, 48);
+
+        // Lumine maapind
+        g.strokeStyle = "#cbd5e0";
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(20, 275);
+        g.lineTo(840, 275);
+        g.stroke();
+
+        // Joonistame massiivi põhjal iga päeva lumememme
+        let algusX = 120;
+        let vaheX = 200;
+        let y = 230;
+
+        for (let i = 0; i < ilmaandmed.length; i++) {
+          let d = ilmaandmed[i];
+          let x = algusX + i * vaheX;
+
+          // Nädalapäeva nimi lumememme kohal
+          g.fillStyle = "#2d3748";
+          g.font = "bold 13px sans-serif";
+          g.textAlign = "center";
+          g.fillText(d.paev, x, 75);
+
+          // Lumememm ilmastikumõjudega
+          joonistaLumememm(x, y, d.temp, d.tuul, d.puhang, d.kuupaev, d.sademed, d.suundX);
+        }
+      }
+    </script>
+  </head>
+  <body onload="joonista()">
+    <h1>Ilmastikumõjude visualiseerimine lumememmedega</h1>
+    <p class="selgitus">
+      <strong>Temperatuur:</strong> soojem ilm teeb lumememme väiksemaks.<br>
+      <strong>Tuul:</strong> tugevam tuul lennutab mütsi peast kaugemale (tuule suunas).<br>
+      <strong>Sademed:</strong> suurem sademete hulk paneb lumepallid rohkem üksteisega kattuma (vihm sulatab kokku).<br>
+      <strong>Kuupäev:</strong> joonistatakse iga lumememme alla.
+    </p>
+    <canvas id="tahvel" width="860" height="390">
+    </canvas>
+  </body>
+</html>
